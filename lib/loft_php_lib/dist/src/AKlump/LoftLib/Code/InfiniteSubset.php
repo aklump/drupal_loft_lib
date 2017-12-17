@@ -70,6 +70,9 @@ class InfiniteSubset {
             throw new \RuntimeException("Dataset may not be empty for slice().");
         }
         $stack = $this->getStack();
+        if (!is_array($stack)) {
+            throw new \RuntimeException("Stack must be an array");
+        }
         while (count($stack) < $count) {
             $stack = array_merge($stack, $this->getSortedDataset());
         }
