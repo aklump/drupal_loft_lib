@@ -66,19 +66,16 @@ class InfiniteSubset {
      */
     public function slice($count)
     {
-        if (!($this->getDataset())) {
-            throw new \RuntimeException("Dataset may not be empty for slice().");
+        $slice = array();
+        if ($this->getDataset()) {
+            $stack = $this->getStack();
+            while (is_array($stack) && count($stack) < $count) {
+                $stack = array_merge($stack, $this->getSortedDataset());
+            }
+            $slice = array_slice($stack, 0, $count, true);
+            $stack = array_slice($stack, $count, null, true);
+            $this->setContainerData($stack);
         }
-        $stack = $this->getStack();
-        if (!is_array($stack)) {
-            throw new \RuntimeException("Stack must be an array");
-        }
-        while (count($stack) < $count) {
-            $stack = array_merge($stack, $this->getSortedDataset());
-        }
-        $slice = array_slice($stack, 0, $count, true);
-        $stack = array_slice($stack, $count, null, true);
-        $this->setContainerData($stack);
 
         return $slice;
     }
@@ -90,7 +87,7 @@ class InfiniteSubset {
      */
     public function getDataset()
     {
-        return $this->getContainerData()['dataset'];
+        return $this->g->get($this->getContainerData(), 'dataset', []);
     }
 
     public function reset(array $dataset)
@@ -106,7 +103,7 @@ class InfiniteSubset {
      */
     private function getStack()
     {
-        return $this->getContainerData()['stack'];
+        return $this->g->get($this->getContainerData(), 'stack', []);
     }
 
     /**
