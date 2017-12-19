@@ -148,6 +148,21 @@ class Strings {
     }
 
     /**
+     * Replace curly double and single quotes with (the more standard) straight quotes.
+     *
+     * @param $string
+     *
+     * @return mixed
+     */
+    public static function noSmartQuotes($string)
+    {
+        $search = array('“', '”', '‘', '’');
+        $replace = array('"', '"', "'", "'");
+
+        return str_replace($search, $replace, $string);
+    }
+
+    /**
      * Return a string with all urls removed (or replaced).
      *
      * @param string $text
