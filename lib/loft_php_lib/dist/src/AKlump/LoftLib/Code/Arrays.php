@@ -241,6 +241,24 @@ class Arrays {
         return $array;
     }
 
+    public static function insertAfterValue(array &$array, $search, $insert)
+    {
+        if (($key = array_search($search, $array)) !== false) {
+            if (!is_numeric($key)) {
+                throw new \InvalidArgumentException("Only indexed arrays are supported.");
+            }
+            $position = $key + 1;
+            array_splice($array, $position, 0, $insert);
+
+            return $position;
+        }
+        else {
+            $array[] = $insert;
+        }
+
+        return count($insert) - 1;
+    }
+
     /**
      * Shuffle an array maintaining keys.
      *

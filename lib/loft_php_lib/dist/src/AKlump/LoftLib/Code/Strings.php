@@ -146,4 +146,18 @@ class Strings {
     {
         return preg_replace('/\s+/s', '', $phrase);
     }
+
+    /**
+     * Return a string with all urls removed (or replaced).
+     *
+     * @param string $text
+     *
+     * @param string $replacement
+     *
+     * @return string
+     */
+    public static function replaceUrls($text, $replacement = ' ')
+    {
+        return trim(preg_replace('/\s*https?:\/\/\S+\s*/i', $replacement, $text));
+    }
 }
