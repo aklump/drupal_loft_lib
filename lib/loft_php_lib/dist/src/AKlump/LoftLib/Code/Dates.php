@@ -240,6 +240,28 @@ class Dates {
         return in_array($month, $months) ? $month : $default;
     }
 
+    /**
+     * Return the english days of the week in lower-case with control of first day of the week.
+     *
+     * @param string $firstDay
+     *
+     * @return array
+     */
+    public static function getDaysOfTheWeek($firstDay = 'sunday')
+    {
+        $stack = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        if (!in_array($firstDay, $stack)) {
+            throw new \InvalidArgumentException("Invalid day: $firstDay");
+        }
+        $tries = 0;
+        while (reset($stack) !== $firstDay && $tries++ < 7) {
+            $move = array_shift($stack);
+            $stack[] = $move;
+        }
+
+        return $stack;
+    }
+
     private static function setDate($date, $key, $value)
     {
         $y = $date->format('Y') * 1;
