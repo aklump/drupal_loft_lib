@@ -175,4 +175,40 @@ class Strings {
     {
         return trim(preg_replace('/\s*https?:\/\/\S+\s*/i', $replacement, $text));
     }
+
+    /**
+     * Format a phone number.
+     *
+     * @param        $text
+     * @param string $format , e.g., '%d.%d.%d', '(%d) %d-%d'
+     *
+     * @return string
+     */
+    public static function phone($text, $format = '(%d) %d-%d')
+    {
+        $digits = preg_replace('/[^\d]/', '', $text);
+        preg_match('/(\d{3})(\d{3})(\d{4})|(\d{3})(\d{4})/', $digits, $matches);
+
+        return sprintf($format, $matches[1], $matches[2], $matches[3]);
+    }
+
+
+    /**
+     * Split a string into $lineCount lines using $breakChar without splitting words.
+     *
+     * @param string $text
+     * @param int    $lineCount
+     * @param string $breakChar Defaults to \n
+     *
+     * @return string
+     */
+    public static function splitBy($text, $breakChar = "\n", $lineCount = 2)
+    {
+        $split = floor(strlen($text) / $lineCount);
+        $wordSplit = strpos($text, ' ', $split);
+
+        return substr($text, 0, $wordSplit) . $breakChar . substr($text, $wordSplit + 1);
+    }
+
+
 }

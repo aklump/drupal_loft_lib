@@ -241,6 +241,59 @@ class Arrays {
         return $array;
     }
 
+    /**
+     * Replace all $oldValue with $newValue in an array.
+     *
+     * @param array $array
+     * @param $oldValue
+     * @param $newValue
+     *
+     * @return array
+     */
+    public static function replaceValue(array $array, $oldValue, $newValue)
+    {
+        $keys = array_keys($array, $oldValue, true);
+        foreach ($keys as $key) {
+            $array[$key] = $newValue;
+        }
+
+        return $array;
+    }
+
+    /**
+     * Insert an array or string in an array before a given value returning the resulting first key.
+     *
+     * @param array $array
+     * @param       $search
+     * @param mixed $insert
+     *
+     * @return int|string The index of the start of the $insert.
+     */
+    public static function insertBeforeValue(array &$array, $search, $insert)
+    {
+        if (($key = array_search($search, $array)) !== false) {
+            if (!is_numeric($key)) {
+                throw new \InvalidArgumentException("Only indexed arrays are supported.");
+            }
+            $position = $key;
+            array_splice($array, $position, 0, $insert);
+
+            return $position;
+        }
+        $array[] = $insert;
+
+        return count($insert) - 1;
+    }
+
+    /**
+     * Insert an array or string in an array after a given value returning the resulting first key.
+     *
+     * @param array $array
+     * @param       $search
+     * @param mixed $insert
+     *
+     * @return int|string The index of the start of the $insert.
+     */
     public static function insertAfterValue(array &$array, $search, $insert)
     {
         if (($key = array_search($search, $array)) !== false) {
@@ -252,11 +305,48 @@ class Arrays {
 
             return $position;
         }
-        else {
-            $array[] = $insert;
-        }
+        $array[] = $insert;
 
         return count($insert) - 1;
+    }
+
+    /**
+     * Insert an associative array right before a key.
+     *
+     * @param array  $array
+     * @param string $search The key to insert before.
+     * @param array  $insert The array to insert.
+     */
+    public static function insertBeforeKey(array &$array, $search, array $insert)
+    {
+        if (is_numeric($search)) {
+            throw new \InvalidArgumentException("\$search may not be numeric.");
+        }
+        $a = [];
+        $b = $array;
+        if (($offset = array_search($search, array_keys($array)))) {
+            $a = array_slice($array, 0, $offset);
+            $b = array_slice($array, $offset);
+        }
+        $array = array_merge($a, $insert, $b);
+    }
+
+    /**
+     * Insert an associative array right after a key.
+     *
+     * @param array  $array
+     * @param string $search The key to insert after.
+     * @param array  $insert The array to insert.
+     */
+    public static function insertAfterKey(array &$array, $search, array $insert)
+    {
+        if (is_numeric($search)) {
+            throw new \InvalidArgumentException("\$search may not be numeric.");
+        }
+        $offset = array_search($search, array_keys($array));
+        $a = array_slice($array, 0, $offset + 1);
+        $b = array_slice($array, $offset + 1);
+        $array = array_merge($a, $insert, $b);
     }
 
     /**

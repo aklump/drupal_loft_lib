@@ -27,7 +27,9 @@ class Dates {
      * @param string             $localTimeZoneName The name of the timezone to use for local times, this is used when
      *                                              the timezone is not specified in dates used by this class.
      * @param string             $nowString         Optional.  This string will be used to compute the current moment
-     *                                              in time.  By default the string is 'now'.
+     *                                              in time.  By default the string is 'now'.  It is also used for how
+     *                                              dates are normalized as any missing parts from the normalizing
+     *                                              date, like the year, is taken from this string.
      * @param \DateTime|null     $periodStart       The bounds control how things like 'monthly' gets normalized.  By
      *                                              default the bounds are 1 month beginning the 1st of the current
      *                                              month.
@@ -216,12 +218,14 @@ class Dates {
 
     public static function getMonthFromString($month, $default = null)
     {
+        $month = str_replace('every', '', $month);
+        $month = trim($month);
         $months = range(1, 12);
         if (!is_numeric($month)) {
             $month_map = array_map(function ($m) {
 
                 $mm = static::setMonth(date_create(), $m);
-                $mm = static::setDay($mm, 1);
+                $mm = static::setDay($mm, 15);
 
                 return [
                     $m,
@@ -262,6 +266,24 @@ class Dates {
         return $stack;
     }
 
+    /**
+     * List all months formatted per $format, keys are month numbers.
+     *
+     * @param string $format As per date().
+     *                       - F Spelled Out
+     *                       - M Abbreviationss
+     *
+     * @return array
+     */
+    public static function getMonths($format = 'F')
+    {
+        $range = range(1, 12);
+
+        return array_combine($range, array_map(function ($m) use ($format) {
+            return date_create("2018-$m-01")->format($format);
+        }, $range));
+    }
+
     private static function setDate($date, $key, $value)
     {
         $y = $date->format('Y') * 1;
@@ -278,7 +300,7 @@ class Dates {
     private static function setTime($date, $key, $value)
     {
         $h = $date->format('G') * 1;
-        $m = $date->format('H') * 1;
+        $m = $date->format('i') * 1;
         $s = $date->format('s') * 1;
         $$key = $value * 1;
 
@@ -336,7 +358,6 @@ class Dates {
         }));
     }
 
-
     /**
      * Filter an array of dates to those within our period
      *
@@ -354,7 +375,6 @@ class Dates {
             return $date > $to;
         }));
     }
-
 
     /**
      * Filter an array of dates to those within our period
@@ -385,7 +405,7 @@ class Dates {
     }
 
     /**
-     * Creates a timezone object and ensures the timezone is set to the locale.
+     * Creates a datetime object and ensures the timezone is set to the locale.
      *
      * In the case $date is already an object, ensures the timezone is in the locale.
      *
@@ -413,10 +433,32 @@ class Dates {
     /**
      * Convert a string representing a date into an array of UTC DateTime objects.
      *
-     * @param string $date_string
-     * @param string $format Omit to return objects, include and the array will contain formatted dates using $format.
+     * When any of the following elements are not indicated by the string, they are taken from
+     *  - $nowString
+     *  - $defaultTime
+     *  - $localTimeZoneName
+     *  - Pay attention here because an ISO8601 date without a timezone will use the
      *
-     * @return array An array of dates as normalized in this function
+     * @param string $date_string All of these are understood:
+     *
+     *                             - 2017-09-30T20:46:23
+     *                             - 2018
+     *                             - 9/2/17, 12:13Z
+     *                             - 12/2/17, 12:56 PST
+     *                             - Sep. 21, 2017 at 12:56 PDT
+     *                             - Sep 02, 2017 at 12:56 PDT
+     *                             - october 8th
+     *                             - 12pm PDT on Sep 9
+     *                             - monthly on the 1st and 16th
+     *                             - jan, feb and monthly on the 1st and 16th
+     *                             - jan, feb and march by the eom
+     *                             - in september by the 20th
+     *                             - in january, march and september by the 3rd
+     *
+     * @param string $format      NULL to return objects, include and the array will contain formatted dates using
+     *                            $format.
+     *
+     * @return array An array of dates as normalized in this function, strings or objects based on $format.
      *
      */
     public function normalize($date_string, $format = DATE_ISO8601_SHORT)
@@ -468,10 +510,8 @@ class Dates {
             }
         }
         elseif ($date_string) {
-            $working_date = str_replace(' at ', '', $date_string);
-            $working_date = $this->create($working_date);
-            if (preg_match('/\S+\s+\d+(th|nd|st|rd)/', $date_string)) {
-                $working_date->setTime($default_hour, $default_minute, $default_second);
+            if (!($working_date = $this->getNowAwareDateFromDateString($date_string))) {
+                throw new \InvalidArgumentException("Cannot parse \"$date_string\"");
             }
             $dates = [$working_date];
         }
@@ -509,6 +549,183 @@ class Dates {
         }
 
         return $result[0];
+    }
+
+    /**
+     * Return a DateTime from $string using $now and $defaultTime to fill in missing elements.
+     *
+     * @param $string
+     *
+     * @return bool|\DateTime|mixed
+     */
+    private function getNowAwareDateFromDateString($string)
+    {
+        $now = $this->now();
+        $return = $this->now();
+        $parts = [
+            'y' => null,
+            'm' => null,
+            'd' => null,
+            'h' => null,
+            'n' => null,
+            's' => null,
+            'z' => null,
+        ];
+        $pad = function ($number) {
+            return str_pad($number, 2, '0', STR_PAD_LEFT);
+        };
+        $filter = function (&$array) {
+            $array = $array ? array_filter($array, function ($v) {
+                return !is_null($v);
+            }) : $array;
+        };
+        $strip = function ($find) use (&$string) {
+            $string = trim(str_replace($find, '', $string), ' ,');
+
+        };
+
+        //
+        //
+        // Detect an ISO8601 date.
+        //
+        $iso = function () use (&$parts, &$return, &$string, $strip) {
+            $regex = '(\d{4})[\/\-](\d{2})[\/\-](\d{2})T.+';
+            if ($string && preg_match("/$regex/i", $string, $temp)) {
+                $return = $this->o($temp[0], $this->timezone);
+                $strip($temp[0]);
+                $parts = array_fill_keys(array_keys($parts), true);
+            }
+        };
+        $year = function () use (&$parts, &$return, &$string, $filter, $strip, $pad) {
+            if ($string && preg_match('/\s*(\d{4})\s*/', $string, $temp)) {
+                $this->setYear($return, $temp[1]);
+                $parts['y'] = true;
+                $strip($temp[1]);
+            }
+        };
+
+        // Formats like:
+        // Sep 9, 2017
+        // Sep. 9, 2017
+        $date = function ($month_names) use (&$parts, &$return, &$string, $filter, $strip, $pad) {
+            if (!$string) {
+                return;
+            }
+            $suffix = '\.?\s*([0-3][0-9]|[1-9])(?:th|nd|st|rd)?(?:, (\d{4}))?';
+            $regex = '(' . implode('|', $month_names) . ')' . $suffix;
+
+            if (preg_match('/' . $regex . '/i', $string, $temp)) {
+                list(, $d['m'], $d['d'], $d['y']) = $temp + [null, null, null, null];
+                $strip($temp[0]);
+                $d['m'] = $d['m'] ? static::getMonthFromString($d['m']) : null;
+                $d['m'] && static::setMonth($return, $d['m']);
+                $d['d'] && static::setDay($return, $d['d']);
+                $d['y'] && static::setYear($return, $d['y']);
+                $filter($d);
+                $parts = array_fill_keys(array_keys($d), true) + $parts;
+            }
+        };
+
+        // Formats like:
+        // 9/2/17
+        $date2 = function () use (&$parts, &$return, &$string, $filter, $strip, $pad, $now) {
+            $regex = '(\d{1,2})[\/](\d{1,2})[\/](\d{2,4})';
+            if (preg_match('/' . $regex . '/i', $string, $temp)) {
+                list(, $d['m'], $d['d'], $d['y']) = $temp + [null, null, null, null];
+                //                $d['m'] = $d['m'] ? $pad(static::getMonthFromString($d['m'])) : null;
+                $d['y'] = strval($pad($d['y']));
+                if (strlen($d['y']) === 2) {
+                    $d['y'] = substr($now->format('Y'), 0, 2) . $d['y'];
+                }
+                $strip($temp[0]);
+                $d['m'] && static::setMonth($return, $d['m']);
+                $d['d'] && static::setDay($return, $d['d']);
+                $d['y'] && static::setYear($return, $d['y']);
+                $filter($d);
+                $parts = array_fill_keys(array_keys($d), true) + $parts;
+            }
+        };
+
+        $time = function () use (&$parts, &$return, &$string, $filter, $strip, $pad) {
+            $regex = '([\d:]{7,8}|[\d:]{4,5}|[\d:]{1,2})(\s*[ap]m)?';
+            $t = [];
+            if ($string && preg_match('/' . $regex . '/i', $string, $temp)) {
+                list($t['h'], $t['n'], $t['s']) = explode(':', $temp[1]) + [null, null, null];
+                $strip($temp[0]);
+
+                // Look for a timezone
+                $tok = strtok($string, ' ');
+                $t['z'] = null;
+                while (empty($tz) && $tok !== false) {
+                    if (!in_array($tok, ['on'])) {
+                        if (strcasecmp($tok, 'Z') === 0) {
+                            $tok = 'UTC';
+                        }
+                        try {
+                            $tz = new \DateTimeZone($tok);
+                            $t['z'] = $tz->getName();
+                        } catch (\Exception $exception) {
+                            // Purposefully left blank.
+                        }
+                    }
+                    $tok = strtok(' ');
+                }
+                $t['z'] && $return->setTimezone(new \DateTimeZone($t['z']));
+
+                // Set numbers after timezone, or conversion takes place.
+                $t['h'] && static::setHour($return, $t['h']);
+                $t['n'] && static::setMinute($return, $t['n']);
+                $t['s'] && static::setSecond($return, $t['s']);
+
+                $filter($t);
+                $parts = array_fill_keys(array_keys($t), true) + $parts;
+            }
+        };
+
+        $iso();
+        if ($string) {
+            $date(static::getMonths());
+            $date(static::getMonths('M'));
+            $date2();
+            $year();
+            $time();
+        }
+
+        $detected = false;
+        if (array_filter($parts)) {
+            $detected = true;
+            $dt = [];
+            list($dt['h'], $dt['n'], $dt['s']) = $this->defaultTime;
+            while (in_array(false, $parts)) {
+                $key = array_search(false, $parts);
+                switch ($key) {
+                    case 'y':
+                        $this->setYear($return, $now->format('Y'));
+                        break;
+                    case 'm':
+                        $this->setMonth($return, $now->format('m'));
+                        break;
+                    case 'd':
+                        $this->setDay($return, $now->format('d'));
+                        break;
+                    case 'h':
+                        $this->setHour($return, $dt['h']);
+                        break;
+                    case 'n':
+                        $this->setMinute($return, $dt['n']);
+                        break;
+                    case 's':
+                        $this->setSecond($return, $dt['s']);
+                        break;
+                    case 'z':
+                        $return->setTimezone($this->timezone);
+                        break;
+                }
+                $parts[$key] = true;
+            }
+        }
+
+        return $detected ? $return : false;
     }
 
     /**

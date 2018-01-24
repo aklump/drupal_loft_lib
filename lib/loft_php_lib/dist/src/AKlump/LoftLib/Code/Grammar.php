@@ -12,6 +12,63 @@ class Grammar {
 
     const CONSONANT = 2;
 
+
+    /**
+     * Ensures that a phrase appears as title case.
+     *
+     * Use this to make sure an article title appears in Title case per AP style.
+     * This is not the same as title, which converts more heavily from hypen, underscore, etc.
+     *
+     * @param       $phrase
+     *
+     * @param array $ignoreWords Any word that appears in this array and matches by case, will not be altered.  Use
+     *                           this for acronyms that you don't want to be altered.
+     *
+     * @return string
+     *
+     * @link http://grammar.yourdictionary.com/capitalization/rules-for-capitalization-in-titles.html
+     */
+    public static function titleCase($phrase, $ignoreWords = [])
+    {
+        $if = function (&$word, $transform) use ($ignoreWords) {
+            if (!in_array($word, $ignoreWords)) {
+                $word = $transform($word);
+            }
+        };
+        $words = array_map(function ($word) use ($if) {
+            $if($word, function ($w) {
+                $w = strtolower($w);
+                $uc = !in_array(strtolower($w), [
+                    'a',
+                    'an',
+                    'the',
+                    'at',
+                    'by',
+                    'for',
+                    'in',
+                    'of',
+                    'on',
+                    'to',
+                    'up',
+                    'and',
+                    'as',
+                    'but',
+                    'or',
+                    'nor',
+                ]);
+
+                return $uc ? ucfirst($w) : lcfirst($w);
+            });
+
+            return $word;
+        }, explode(' ', $phrase));
+        $if($words[0], 'ucfirst');
+        $last = count($words) - 1;
+        $if($words[$last], 'ucfirst');
+
+        return implode(' ', $words);
+    }
+
     /**
      * Tests if a word ends with ??.
      *
@@ -246,7 +303,7 @@ class Grammar {
                 case 'update':
                     break;
                 default:
-                $modifiedVerb .= $lastChar;
+                    $modifiedVerb .= $lastChar;
                     break;
             }
         }
