@@ -192,6 +192,26 @@ class Strings {
         return sprintf($format, $matches[1], $matches[2], $matches[3]);
     }
 
+    /**
+     * Attempt to pull out the first name from a full name.
+     *
+     * @param string $fullname
+     *
+     * @return string
+     */
+    public static function getFirstName($fullname)
+    {
+        $reversed = explode(',', $fullname);
+        if (count($reversed) > 1) {
+            array_shift($reversed);
+            $fullname = reset($reversed);
+        }
+        $fullname = preg_replace('/mrs?\.?/i', '', trim($fullname));
+        $parts = array_values(array_filter(explode(' ', $fullname)));
+
+        return reset($parts);
+    }
+
 
     /**
      * Split a string into $lineCount lines using $breakChar without splitting words.
