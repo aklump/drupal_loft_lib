@@ -439,27 +439,31 @@ class Dates {
      *  - $localTimeZoneName
      *  - Pay attention here because an ISO8601 date without a timezone will use the
      *
-     * @param string $date_string All of these are understood:
+     * @param string $date_string
+     *                            All of these are understood:
+     *                            - 2017-09-30T20:46:23
+     *                            - 2018
+     *                            - 9/2/17, 12:13Z
+     *                            - 12/2/17, 12:56 PST
+     *                            - Sep. 21, 2017 at 12:56 PDT
+     *                            - Sep 02, 2017 at 12:56 PDT
+     *                            - october 8th
+     *                            - 12pm PDT on Sep 9
+     *                            - monthly on the 1st and 16th
+     *                            - jan, feb and monthly on the 1st and 16th
+     *                            - jan, feb and march by the eom
+     *                            - in september by the 20th
+     *                            - in january, march and september by the 3rd
+     *                            - thursday
      *
-     *                             - 2017-09-30T20:46:23
-     *                             - 2018
-     *                             - 9/2/17, 12:13Z
-     *                             - 12/2/17, 12:56 PST
-     *                             - Sep. 21, 2017 at 12:56 PDT
-     *                             - Sep 02, 2017 at 12:56 PDT
-     *                             - october 8th
-     *                             - 12pm PDT on Sep 9
-     *                             - monthly on the 1st and 16th
-     *                             - jan, feb and monthly on the 1st and 16th
-     *                             - jan, feb and march by the eom
-     *                             - in september by the 20th
-     *                             - in january, march and september by the 3rd
-     *
-     * @param string $format      NULL to return objects, include and the array will contain formatted dates using
+     * @param string $format
+     *                            NULL to return objects, include and the array will contain formatted dates using
      *                            $format.
      *
-     * @return array An array of dates as normalized in this function, strings or objects based on $format.
+     * @return array
+     *   An array of UTC dates as normalized in this function, strings or objects based on $format.
      *
+     * @throws \Exception
      */
     public function normalize($date_string, $format = DATE_ISO8601_SHORT)
     {
@@ -509,6 +513,21 @@ class Dates {
                 }
             }
         }
+
+        elseif (in_array($date_string, static::getDaysOfTheWeek())) {
+            $dates = [];
+            $working_date = clone $now;
+            for ($i = 0; $i < 7; ++$i) {
+                $working_date->setTime($default_hour, $default_minute, $default_second);
+                $f = $working_date->format('l');
+                if (strcasecmp($working_date->format('l'), $date_string) === 0) {
+                    $dates = [$working_date];
+                    break;
+                }
+                $working_date->add(new \DateInterval('P1D'));
+            }
+        }
+
         elseif ($date_string) {
             if (!($working_date = $this->getNowAwareDateFromDateString($date_string))) {
                 throw new \InvalidArgumentException("Cannot parse \"$date_string\"");
