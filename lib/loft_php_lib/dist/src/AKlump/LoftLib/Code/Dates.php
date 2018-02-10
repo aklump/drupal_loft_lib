@@ -24,29 +24,34 @@ class Dates {
     /**
      * Dates constructor.
      *
-     * @param string             $localTimeZoneName The name of the timezone to use for local times, this is used when
-     *                                              the timezone is not specified in dates used by this class.
-     * @param string             $nowString         Optional.  This string will be used to compute the current moment
-     *                                              in time.  By default the string is 'now'.  It is also used for how
-     *                                              dates are normalized as any missing parts from the normalizing
-     *                                              date, like the year, is taken from this string.
-     * @param \DateTime|null     $periodStart       The bounds control how things like 'monthly' gets normalized.  By
-     *                                              default the bounds are 1 month beginning the 1st of the current
+     * @param string             $localTimeZoneName The name of the timezone to use for local
+     *                                              times, this is used when the
+     *                                              timezone is not specified in dates used by this class.
+     * @param string             $nowString         Optional.  This string will be used to compute
+     *                                              the current moment in time.
+     *                                              By default the string is 'now'.  It is also used for how dates are
+     *                                              normalized as any missing parts from the normalizing date, like the
+     *                                              year, is taken from this string.
+     * @param \DateTime|null     $periodStart       The bounds control how things like
+     *                                              'monthly' gets normalized.
+     *                                              By default the bounds are 1 month beginning the 1st of the current
      *                                              month.
-     * @param \DateInterval|null $periodInterval    If you want a normalized monthly to generate 12 dates instead of 1,
-     *                                              you would set this to 'P1Y' and set the $periodStart to the
+     * @param \DateInterval|null $periodInterval    If you want a normalized monthly
+     *                                              to generate 12 dates instead
+     *                                              of 1, you would set this to 'P1Y' and set the $periodStart to the
      *                                              earliest month of the year, and probably January first.
-     * @param array              $defaultTime       A three element indexed array with hour, minute, second for the
-     *                                              default UTC time when using the normalize() method.  Be careful
-     *                                              here because if you're local timezone is not UTC then you will not
-     *                                              be getting the numbers you use here as you might expect.
+     * @param array              $defaultTime       A three element indexed array with hour, minute,
+     *                                              second for the default UTC
+     *                                              time when using the normalize() method. Be careful here because if
+     *                                              you're local timezone is not UTC then you will not be getting the
+     *                                              numbers you use here as you might expect.
      */
     public function __construct(
         $localTimeZoneName,
         $nowString = 'now',
         \DateTime $periodStart = null,
         \DateInterval $periodInterval = null,
-        array $defaultTime = array()
+        array $defaultTime = []
     ) {
         $this->timezone = new \DateTimeZone($localTimeZoneName);
         $this->nowString = empty($nowString) ? 'now' : $nowString;
@@ -60,7 +65,8 @@ class Dates {
     }
 
     /**
-     * Ensures that $date is a \DateTime object and set it's timezone to zulu (UTC)
+     * Ensures that $date is a \DateTime object and set it's timezone to zulu
+     * (UTC)
      *
      * @param $date
      *
@@ -74,12 +80,15 @@ class Dates {
     /**
      * Ensures that $date is a \DateTime object.
      *
-     * If $date is a string it will be converted to an object using it's inherent timezone; if the timezone is not
-     * inherent, then $timezone is used as the timezone of the object.
+     * If $date is a string it will be converted to an object using it's inherent
+     * timezone; if the timezone is not inherent, then $timezone is used as the
+     * timezone of the object.
      *
-     * Note how this is different from z(), in the case of z() the object will always have zulu timezone.  With o() if
-     * the timezone is inherent, then the provided $timezone is ignored.  In the case of 2017-10-22 there is no
-     * inherent timezone, so $timezone will be used to set the timezone on the returned object.
+     * Note how this is different from z(), in the case of z() the object will
+     * always have zulu timezone.  With o() if the timezone is inherent, then the
+     * provided $timezone is ignored.  In the case of 2017-10-22 there is no
+     * inherent timezone, so $timezone will be used to set the timezone on the
+     * returned object.
      *
      * @param string|\DateTime     $date
      * @param string|\DateTimeZone $timezone
@@ -95,7 +104,8 @@ class Dates {
     }
 
     /**
-     * Return an array of first/last seconds in the quarter of $date; no timezone conversion.
+     * Return an array of first/last seconds in the quarter of $date; no timezone
+     * conversion.
      *
      * @param \DateTime $date
      *
@@ -112,7 +122,10 @@ class Dates {
         $d2 = clone $date;
         $d2 = $d2->setDate($y, $n[1], 1);
         $d2 = $d2->setDate($y, $n[1], 1 * $d2->format('t'));
-        $n = [$d1->setDate($y, $n[0], 1)->setTime(0, 0, 0), $d2->setTime(23, 59, 59)];
+        $n = [
+            $d1->setDate($y, $n[0], 1)->setTime(0, 0, 0),
+            $d2->setTime(23, 59, 59),
+        ];
 
         return $n;
     }
@@ -152,15 +165,21 @@ class Dates {
      *
      * Figure out the quarter a date falls into in a year
      *
-     * Shorten a string by making assumptions that no timezone is UTC, no seconds, minutes or hours are 0.  Be aware
-     * that shortened strings do not expand back by simply running them through date_create(), so be careful with
-     * dataloss.  This can be used for ids based on dates, which will be unique to the second, and as short as possible.
+     * Shorten a string by making assumptions that no timezone is UTC, no
+     * seconds, minutes or hours are 0.  Be aware that shortened strings do not
+     * expand back by simply running them through date_create(), so be careful
+     * with dataloss.  This can be used for ids based on dates, which will be
+     * unique to the second, and as short as possible.
      *
      * @param string|\DateTime $date       The date that is to be formatted.
-     * @param                  $format     The format string; this includes date() with the addition of:
-     *                                     - 'q'  The quarter in the year of the date.  1 to 4
-     *                                     - '<'  End an ISO8601 string with < and:
-     *                                     - The rightmost 'Z' or '+0000' will be removed
+     * @param                  $format     The format string; this includes
+     *                                     date() with the addition of:
+     *                                     - 'q'  The quarter in the year of the
+     *                                     date.  1 to 4
+     *                                     - '<'  End an ISO8601 string with <
+     *                                     and:
+     *                                     - The rightmost 'Z' or '+0000' will be
+     *                                     removed
      *                                     - The rightmost ':00' will be removed
      *                                     - The rightmost 'T' will be removed.
      *
@@ -245,7 +264,8 @@ class Dates {
     }
 
     /**
-     * Return the english days of the week in lower-case with control of first day of the week.
+     * Return the english days of the week in lower-case with control of first
+     * day of the week.
      *
      * @param string $firstDay
      *
@@ -253,7 +273,15 @@ class Dates {
      */
     public static function getDaysOfTheWeek($firstDay = 'sunday')
     {
-        $stack = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        $stack = [
+            'sunday',
+            'monday',
+            'tuesday',
+            'wednesday',
+            'thursday',
+            'friday',
+            'saturday',
+        ];
         if (!in_array($firstDay, $stack)) {
             throw new \InvalidArgumentException("Invalid day: $firstDay");
         }
@@ -308,33 +336,49 @@ class Dates {
     }
 
     /**
-     * Checks to see if now (in local tz) is between 00:00:00 and 23:59:59 on $day1.
+     * Checks to see if now (in local tz) is between 00:00:00 and 23:59:59 on
+     * $dateString.
      *
-     * @param $day1
+     * @param \DateTime|string $date
+     *   A date to be checked to see if it is today.  This string is normalized.
+     *   If today has been altered by
+     *   $this->now, bear that in mind.
      *
      * @return bool
+     *   True if today is $dateString.  False if now is before or after
+     *   $dateString.
      *
      * @see isTodayInDays().
+     * @throws \Exception
      */
-    public function isToday($day1)
+    public function isToday($date)
     {
-        return $this->isTodayInDays($day1, $day1);
+        return $this->isTodayInDays($date, $date);
     }
 
     /**
-     * Checks to see if today (in local timezone) is between two days (normalized to local tz).
+     * Checks to see if today (in local timezone) is between two days (normalized
+     * to local tz).
      *
-     * If you pass no argument for $day2, then the $day2 will assume end of the day of $day1.
-     *
-     * @param string $day1 Passed through normalizeToOne().  After normalizing the time is set to 0,0,0 local.
-     * @param string $day2 Passed through normalizeToOne().  After normalizing the time is set to 23,59,59 local.
+     * @param \DateTime|string $day1
+     *   Passed through normalizeToOne().  After normalizing the time is set to
+     *   0,0,0 local.
+     * @param \DateTime|string $day2
+     *   Passed through normalizeToOne().  After normalizing the time is set to
+     *   23,59,59 local.
      *
      * @return bool
+     * @throws \Exception
      */
     public function isTodayInDays($day1, $day2)
     {
-        $day1 = $this->l($this->normalizeToOne($day1))->setTime(0, 0, 0);
-        $day2 = $this->l($this->normalizeToOne($day2))->setTime(23, 59, 59);
+        if (is_object($day1) && $day1 === $day2) {
+            $day2 = clone $day1;
+        }
+        $day1 = is_string($day1) ? $this->normalizeToOne($day1) : $day1;
+        $day2 = is_string($day2) ? $this->normalizeToOne($day2) : $day2;
+        $day1 = $this->l($day1)->setTime(0, 0, 0);
+        $day2 = $this->l($day2)->setTime(23, 59, 59);
         $now = $this->now();
 
         return $day1 <= $now && $now <= $day2;
@@ -407,7 +451,8 @@ class Dates {
     /**
      * Creates a datetime object and ensures the timezone is set to the locale.
      *
-     * In the case $date is already an object, ensures the timezone is in the locale.
+     * In the case $date is already an object, ensures the timezone is in the
+     * locale.
      *
      * @param string|\DateTime $date
      *
@@ -431,15 +476,18 @@ class Dates {
     }
 
     /**
-     * Convert a string representing a date into an array of UTC DateTime objects.
+     * Convert a string representing a date into an array of UTC DateTime
+     * objects.
      *
-     * When any of the following elements are not indicated by the string, they are taken from
+     * When any of the following elements are not indicated by the string, they
+     * are taken from
      *  - $nowString
      *  - $defaultTime
      *  - $localTimeZoneName
-     *  - Pay attention here because an ISO8601 date without a timezone will use the
+     *  - Pay attention here because an ISO8601 date without a timezone will use
+     * the
      *
-     * @param string $date_string
+     * @param string $dateString
      *                            All of these are understood:
      *                            - 2017-09-30T20:46:23
      *                            - 2018
@@ -457,20 +505,25 @@ class Dates {
      *                            - thursday
      *
      * @param string $format
-     *                            NULL to return objects, include and the array will contain formatted dates using
+     *                            NULL to return objects, include and the array
+     *                            will contain formatted dates using
      *                            $format.
      *
      * @return array
-     *   An array of UTC dates as normalized in this function, strings or objects based on $format.
+     *   An array of UTC dates as normalized in this function, strings or objects
+     *   based on $format.
      *
      * @throws \Exception
      */
-    public function normalize($date_string, $format = DATE_ISO8601_SHORT)
+    public function normalize($dateString, $format = DATE_ISO8601_SHORT)
     {
+        if (!is_string($dateString)) {
+            throw new \InvalidArgumentException("\$dateString must be a string. Received a " . gettype($dateString));
+        }
         $dates = [];
         $now = $this->now();
         list($default_hour, $default_minute, $default_second) = $this->defaultTime;
-        if (preg_match('/(?:in )?(.+?)\s+(?:by|on)\s+the\s+(.+)/i', $date_string, $matches)) {
+        if (preg_match('/(?:in )?(.+?)\s+(?:by|on)\s+the\s+(.+)/i', $dateString, $matches)) {
             $months = array_map(function ($value) {
                 return trim($value);
             }, explode(',', str_replace('and', ',', $matches[1])));
@@ -493,7 +546,7 @@ class Dates {
             }
 
             preg_match_all('/(eom|\d+(?:th|nd|st|rd))/i', $matches[2], $temp);
-            $days = isset($temp[1]) ? $temp[1] : array();
+            $days = isset($temp[1]) ? $temp[1] : [];
 
             foreach ($months as $month) {
                 $working_date = clone $now;
@@ -514,13 +567,13 @@ class Dates {
             }
         }
 
-        elseif (in_array($date_string, static::getDaysOfTheWeek())) {
+        elseif (in_array($dateString, static::getDaysOfTheWeek())) {
             $dates = [];
             $working_date = clone $now;
             for ($i = 0; $i < 7; ++$i) {
                 $working_date->setTime($default_hour, $default_minute, $default_second);
                 $f = $working_date->format('l');
-                if (strcasecmp($working_date->format('l'), $date_string) === 0) {
+                if (strcasecmp($working_date->format('l'), $dateString) === 0) {
                     $dates = [$working_date];
                     break;
                 }
@@ -528,9 +581,9 @@ class Dates {
             }
         }
 
-        elseif ($date_string) {
-            if (!($working_date = $this->getNowAwareDateFromDateString($date_string))) {
-                throw new \InvalidArgumentException("Cannot parse \"$date_string\"");
+        elseif ($dateString) {
+            if (!($working_date = $this->getNowAwareDateFromDateString($dateString))) {
+                throw new \InvalidArgumentException("Cannot parse \"$dateString\"");
             }
             $dates = [$working_date];
         }
@@ -553,25 +606,31 @@ class Dates {
     /**
      * Normalize a date string when you require exactly one value.
      *
-     * @param string $date_string
-     * @param string $format
+     * @param string      $dateString
+     *   A string representing a date.
+     * @param null|string $format
+     *   Pass a string to format the date, or NULL to return the object.
      *
-     * @return \DateTime Normalized object in UTC.
+     * @return \DateTime|string
+     *   Normalized object in UTC. If you pass format, this will return a string.
      *
-     * @throws \InvalidArgumentException When normalize returns other than exactly one value.
+     * @throws \InvalidArgumentException When normalize returns other than
+     *   exactly one value.
+     * @throws \Exception
      */
-    public function normalizeToOne($date_string, $format = DATE_ISO8601_SHORT)
+    public function normalizeToOne($dateString, $format = DATE_ISO8601_SHORT)
     {
-        $result = $this->normalize($date_string, $format);
+        $result = $this->normalize($dateString, $format);
         if (count($result) !== 1) {
-            throw new \InvalidArgumentException("\"$date_string\" must only normalize to a single date.");
+            throw new \InvalidArgumentException("\"$dateString\" must only normalize to a single date.");
         }
 
         return $result[0];
     }
 
     /**
-     * Return a DateTime from $string using $now and $defaultTime to fill in missing elements.
+     * Return a DateTime from $string using $now and $defaultTime to fill in
+     * missing elements.
      *
      * @param $string
      *
@@ -669,7 +728,11 @@ class Dates {
             $regex = '([\d:]{7,8}|[\d:]{4,5}|[\d:]{1,2})(\s*[ap]m)?';
             $t = [];
             if ($string && preg_match('/' . $regex . '/i', $string, $temp)) {
-                list($t['h'], $t['n'], $t['s']) = explode(':', $temp[1]) + [null, null, null];
+                list($t['h'], $t['n'], $t['s']) = explode(':', $temp[1]) + [
+                    null,
+                    null,
+                    null,
+                ];
                 $strip($temp[0]);
 
                 // Look for a timezone
@@ -754,13 +817,18 @@ class Dates {
      * @param \DateInterval|null $period
      *
      * @return $this
+     * @throws \Exception
      */
     private function setNormalizationPeriod(\DateTime $start = null, \DateInterval $period = null)
     {
-        $start = is_null($start) ? $this->setDay($this->now(), 1)->setTime(0, 0, 0) : $start;
+        $start = is_null($start) ? $this->setDay($this->now(), 1)
+                                        ->setTime(0, 0, 0) : $start;
         $period = is_null($period) ? new \DateInterval('P1M') : $period;
         $end = clone $start;
-        $this->bounds = [$start, $end->add($period)->sub(new \DateInterval('PT1S'))];
+        $this->bounds = [
+            $start,
+            $end->add($period)->sub(new \DateInterval('PT1S')),
+        ];
 
         return $this;
     }
