@@ -106,7 +106,7 @@ interface DatasetInterface {
     /**
      * Important (and validate) data.
      *
-     * @param array|object|string $data
+     * @param array|object|string $dataset
      *
      * @return $this
      *

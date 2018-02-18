@@ -406,6 +406,7 @@ abstract class Dataset implements DatasetInterface {
      * Define the required accept for the dataset.
      *
      * @return array
+     *
      * @codeCoverageIgnore
      */
     protected static function requireKeys()
@@ -420,6 +421,7 @@ abstract class Dataset implements DatasetInterface {
      * You should only return keys that have been defined as string types.
      *
      * @return array
+     *
      * @codeCoverageIgnore
      */
     protected static function match()
@@ -501,7 +503,7 @@ abstract class Dataset implements DatasetInterface {
 
     public function __toString()
     {
-        return json_encode($this->dataset);
+        return json_encode($this->get());
     }
 
     public function getMarkdown()
