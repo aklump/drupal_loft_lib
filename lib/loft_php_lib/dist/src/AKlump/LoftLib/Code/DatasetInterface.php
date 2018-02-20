@@ -82,7 +82,9 @@ interface DatasetInterface {
      * Chain this to the validate() method.
      *
      * @return $this
-     * @throws If any validation problems exist.
+     *
+     * @throws \InvalidArgumentException
+     *   If any validation problems exist.
      */
     public function throwFirstProblem();
 

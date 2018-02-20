@@ -31,6 +31,11 @@ use AKlump\Data\Data;
  */
 abstract class Dataset implements DatasetInterface {
 
+    /**
+     * Regex constant for validating ISO8601 dates.
+     *
+     * @var string
+     */
     const REGEX_DATEISO8601 = '/^\d{4}\-\d{2}\-\d{2}(?:\T| )\d{2}\:\d{2}.*/';
 
     //Y-m-d\TH:i:sO
@@ -39,10 +44,15 @@ abstract class Dataset implements DatasetInterface {
 
     protected $withContext = false;
 
-    protected $dataset;
+    /**
+     * The actual values imported into the instance.
+     *
+     * @var array
+     */
+    protected $dataset = [];
 
     /**
-     * Holds validate problems
+     * Holds validate problems.
      *
      * @var array
      */
@@ -392,14 +402,15 @@ abstract class Dataset implements DatasetInterface {
     /**
      * Define example data.
      *
-     * @return An array of arrays, each is an example dataset.  You must return at least one example.  Default values
-     *            will NOT be added in, you must include a complete recordset in each element.
+     * @return array
+     *   An array of arrays, each is an example dataset.  You must return at least one example.  Default values will
+     *   NOT be added in, you must include a complete recordset in each element.
      * @codeCoverageIgnore
      */
     protected static function examples()
     {
         $method = get_called_class() . ':' . __METHOD__;
-        throw new \RuntimeException("$method not implemented.");
+        throw new \RuntimeException("$method must be implemented.");
     }
 
     /**
@@ -412,7 +423,7 @@ abstract class Dataset implements DatasetInterface {
     protected static function requireKeys()
     {
         $method = get_called_class() . ':' . __METHOD__;
-        throw new \RuntimeException("$method not implemented.");
+        throw new \RuntimeException("$method must be implemented.");
     }
 
     /**
@@ -427,7 +438,7 @@ abstract class Dataset implements DatasetInterface {
     protected static function match()
     {
         $method = get_called_class() . ':' . __METHOD__;
-        throw new \RuntimeException("$method not implemented.");
+        throw new \RuntimeException("$method must be implemented.");
     }
 
     /**
@@ -440,7 +451,7 @@ abstract class Dataset implements DatasetInterface {
     protected static function defaults()
     {
         $method = get_called_class() . ':' . __METHOD__;
-        throw new \RuntimeException("$method not implemented.");
+        throw new \RuntimeException("$method must be implemented.");
     }
 
     /**
@@ -454,7 +465,7 @@ abstract class Dataset implements DatasetInterface {
     protected static function types()
     {
         $method = get_called_class() . ':' . __METHOD__;
-        throw new \RuntimeException("$method not implemented.");
+        throw new \RuntimeException("$method must be implemented.");
     }
 
     /**
