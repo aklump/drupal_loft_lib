@@ -32,6 +32,7 @@ class ComposerStaticInit09c43e602a22ad00fce2864419163979
         'AKlump\\LoftLib\\Code\\InfiniteSubset' => __DIR__ . '/../..' . '/lib/loft_php_lib/dist/src/AKlump/LoftLib/Code/InfiniteSubset.php',
         'AKlump\\LoftLib\\Code\\Markdown' => __DIR__ . '/../..' . '/lib/loft_php_lib/dist/src/AKlump/LoftLib/Code/Markdown.php',
         'AKlump\\LoftLib\\Code\\ObjectCacheTrait' => __DIR__ . '/../..' . '/lib/loft_php_lib/dist/src/AKlump/LoftLib/Code/ObjectCacheTrait.php',
+        'AKlump\\LoftLib\\Code\\PersistentSequence' => __DIR__ . '/../..' . '/lib/loft_php_lib/dist/src/AKlump/LoftLib/Code/PersistentSequence.php',
         'AKlump\\LoftLib\\Code\\PhpDocBlock' => __DIR__ . '/../..' . '/lib/loft_php_lib/dist/src/AKlump/LoftLib/Code/PhpDocBlock.php',
         'AKlump\\LoftLib\\Code\\StandardPhpErrorException' => __DIR__ . '/../..' . '/lib/loft_php_lib/dist/src/AKlump/LoftLib/Code/StandardPhpErrorException.php',
         'AKlump\\LoftLib\\Code\\String' => __DIR__ . '/../..' . '/lib/loft_php_lib/dist/src/AKlump/LoftLib/Code/String.php',

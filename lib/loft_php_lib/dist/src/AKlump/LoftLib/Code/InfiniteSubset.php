@@ -19,7 +19,7 @@ use AKlump\Data\Data;
  *
  * @code
  *  // Each time this page loads, 3 tile nids will be loaded from the list of nids.
- *  $nids = new InfiniteSubset([255, 365, 987, 123, 455, 99, 101, 345], 'round_robin.related.123');
+ *  $nids = new InfiniteSubset('round_robin.related.123', [255, 365, 987, 123, 455, 99, 101, 345]);
  *  $tiles = node_]oad_multiple($nids->slice(3));
  * @endcode
  *
@@ -54,7 +54,9 @@ class InfiniteSubset {
             $this->container =& $stateArray;
         }
         $this->containerPath = $stateArrayPath;
-        $this->reset($dataset);
+        if (!$this->containerIsInitialized()) {
+            $this->reset($dataset);
+        }
     }
 
     /**
@@ -87,13 +89,39 @@ class InfiniteSubset {
      */
     public function getDataset()
     {
-        return $this->g->get($this->getContainerData(), 'dataset', []);
+        $container = $this->getContainerData();
+
+        return $this->g->get($container, 'dataset', []);
     }
 
     public function reset(array $dataset)
     {
         return $this->setContainerData(null, $dataset)
                     ->setContainerData($this->getSortedDataset());
+    }
+
+    /**
+     * Checks if the storage container has been initialized or not.
+     *
+     * @return bool
+     */
+    protected function containerIsInitialized()
+    {
+        $data = $this->getContainerData();
+
+        return count($data['stack']) !== 0;
+    }
+
+    /**
+     * Return the dataset in a new random order.
+     *
+     * You may want to extend this class and override this method to control sorting algorithm.
+     *
+     * @return array
+     */
+    protected function getSortedDataset()
+    {
+        return Arrays::shuffleWithKeys($this->getDataset());
     }
 
     /**
@@ -104,18 +132,6 @@ class InfiniteSubset {
     private function getStack()
     {
         return $this->g->get($this->getContainerData(), 'stack', []);
-    }
-
-    /**
-     * Return the dataset in a new random order.
-     *
-     * You may want to extend this class and override this method to control sorting algorithm.
-     *
-     * @return array
-     */
-    private function getSortedDataset()
-    {
-        return Arrays::shuffleWithKeys($this->getDataset());
     }
 
     /**
@@ -148,18 +164,18 @@ class InfiniteSubset {
      */
     private function setContainerData(array $stack = null, array $dataset = null)
     {
-        $value = $this->getContainerData();
+        $data = $this->getContainerData();
         if (!is_null($stack)) {
-            $value['stack'] = $stack;
+            $data['stack'] = $stack;
         }
         if (!is_null($dataset)) {
-            $value['dataset'] = $dataset;
+            $data['dataset'] = $dataset;
         }
         if (!$this->containerPath) {
-            $this->container = $value;
+            $this->container = $data;
         }
         else {
-            $this->g->set($this->container, $this->containerPath, $value);
+            $this->g->set($this->container, $this->containerPath, $data);
         }
 
         return $this;

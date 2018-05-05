@@ -103,12 +103,16 @@ class FilePath implements PersistentInterface {
      * @param array  $options   Configuration options for the instance:
      *                          - install bool Defaults true.  Set this to false an no files or folders will be created
      *                          until you call install().
+     *                          - is_dir bool Defaults to null. Set this to true and $path will be seen as a directory.
      */
     public function __construct($path, $extension = null, $options = [])
     {
-        $options += ['install' => true];
         $this->intention = func_get_args() + [null, null, []];
-        if ($options['install']) {
+        $this->intention[2] += [
+            'install' => true,
+            'is_dir' => null,
+        ];
+        if ($this->intention[2]['install']) {
             $this->install();
         }
     }
@@ -130,29 +134,31 @@ class FilePath implements PersistentInterface {
     /**
      * Ensure all directories in $path exist, if possible.
      *
-     * @param     $path string Expecting a directory, but file works if it has
-     *                  an extension as dirName() will be used.  However, if
-     *                  the file does not have an extension, it will be assumed
-     *                  it is a dirName, and that may be unexpected.  It is
-     *                  most consistent to always pass a path to a directory
-     *                  and avoid including the file component of the path.
-     * @param int $mode
+     * @param      $path string Expecting a directory, but file works if it has
+     *                   an extension as dirName() will be used.  However, if
+     *                   the file does not have an extension, it will be assumed
+     *                   it is a dirName, and that may be unexpected.  It is
+     *                   most consistent to always pass a path to a directory
+     *                   and avoid including the file component of the path.
+     * @param int  $mode
+     * @param bool $path_is_dir
+     *                   Set this to true and $path will be taken as a directory, no matter the format.
      *
      * @return array - 0 The directory with trailing / removed
      * - 0 The directory with trailing / removed
      * - 1 The basename if exists.
      *
      * @throws \AKlump\LoftLib\Code\AKlump\LoftLib\Code\StandardPhpErrorException
-     * @throws \InvalidArgumentException When $path is empty.
      */
-    public static function ensureDir($path, $mode = 0777)
+    public static function ensureDir($path, $mode = 0777, $path_is_dir = false)
     {
         if (empty($path)) {
             throw new \InvalidArgumentException("\$path cannot be empty.");
         }
+        $mode = $mode ?: 0777;
         $info = pathinfo($path);
         $basename = '';
-        if (!empty($info['extension'])) {
+        if ($path_is_dir !== true && !empty($info['extension'])) {
             $path = $info['dirname'];
             $basename = $info['basename'];
         }
@@ -596,7 +602,7 @@ class FilePath implements PersistentInterface {
 
     public function install()
     {
-        list($path, $extension) = $this->intention;
+        list($path, $extension, $options) = $this->intention;
         if ($extension) {
 
             // Try to make sure $path references a directory, not a file.
@@ -611,7 +617,7 @@ class FilePath implements PersistentInterface {
             }
             $path .= '/' . static::tempName($extension);
         }
-        list($this->dir, $this->basename) = static::ensureDir($path);
+        list($this->dir, $this->basename) = static::ensureDir($path, null, $options['is_dir']);
         $this->type = empty($this->basename) ? static::TYPE_DIR : static::TYPE_FILE;
 
         return $this;
