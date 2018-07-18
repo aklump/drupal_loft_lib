@@ -4,7 +4,7 @@
 
 The Drupal 8 version of this is not really a module, but an entry in your root _composer.json_
 
-Add the following to the _repositories_ section of the root _composer.json_
+Add the following to the `repositories` section of the root _composer.json_
 
     {
         "repositories": [
